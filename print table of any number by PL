@@ -1,0 +1,8 @@
+DECLARE
+v_nu_num NUMBER(5):= &number;
+BEGIN
+ for i IN 1..10 loop
+ 
+DBMS_OUTPUT.PUT_LINE(v_nu_num || '*' || i || '=' || v_nu_num*i );
+ end loop;
+ END;
