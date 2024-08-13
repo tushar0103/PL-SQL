@@ -1,0 +1,31 @@
+SQL> ED
+Wrote file afiedt.buf
+
+  1  DECLARE
+  2  V_EMP_REC EMPLOYEES%ROWTYPE;
+  3  BEGIN
+  4  SELECT *
+  5  INTO V_EMP_REC
+  6  FROM EMPLOYEES
+  7  WHERE EMPLOYEE_ID=&ID;
+  8  INSERT INTO EMP_REP VALUES V_EMP_REC;
+  9  COMMIT;
+ 10* END;
+SQL> /
+Enter value for id: 101
+old   7: WHERE EMPLOYEE_ID=&ID;
+new   7: WHERE EMPLOYEE_ID=101;
+
+PL/SQL procedure successfully completed.
+
+SQL> SELECT * FROM EMP_REP;
+
+EMPLOYEE_ID FIRST_NAME           LAST_NAME
+----------- -------------------- -------------------------
+EMAIL                     PHONE_NUMBER         HIRE_DATE JOB_ID         SALARY
+------------------------- -------------------- --------- ---------- ----------
+COMMISSION_PCT MANAGER_ID DEPARTMENT_ID
+-------------- ---------- -------------
+        101 Neena                Kochhar
+NKOCHHAR                  515.123.4568         21-SEP-05 AD_VP           17000
+                      100            90
