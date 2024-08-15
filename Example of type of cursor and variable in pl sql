@@ -1,0 +1,544 @@
+  =======================basic blocks======================
+
+====================================%type and local variable==============================
+
+SQL> declare
+  2  v_sal employees.salary%type;
+  3  begin
+  4
+  5  select max(salary) into v_sal from employees;
+  6  dbms_output.put_line(v_sal);
+  7  end;
+  8  /
+33000
+
+
+declare
+v_sal employees.salary%type;
+v_now_sal v_sal%type;
+begin
+select max(salary) 
+into v_sal 
+from employees;
+  v_now_sal := 2000 + v_sal;
+dbms_output.put_line('maximum salary' || ' ' || v_sal || ' now salayr ' || v_now_sal);
+end;
+/
+
+
+===============================================================================substituional variable==============================
+
+
+question Find salary of that employee which user input the employee id;
+ declare
+   v_sal employees.salary%type;
+  begin
+  select salary
+ into v_sal 
+from employees
+where employee_id=&id;
+  dbms_output.put_line(v_sal);
+  end;
+/
+
+
+------------------
+
+question Find the last name of that employeee which user input the mployee id
+andwer  declare
+   v_l_name employees.last_name%type;
+  begin
+  select salary
+ into v_l_name 
+from employees
+where employee_id=&id;
+  dbms_output.put_line(v_l_name);
+  end;
+/
+
+
+============================================================================host/bind variable============================================================================
+
+   variable my_sal number;----------------------> first we need to declare the variable
+
+
+declare
+v_name employees.last_name%type;
+v_mgr employees.manager_id%type;
+begin
+select last_name, manager_id, salary
+into v_name, v_mgr, :my_sal
+from employees
+where employee_id=101;
+dbms_output.put_line('last name of employee is : ' || v_name);
+dbms_output.put_line('manager name of employee is : ' || v_mgr);
+dbms_output.put_line('salary of employee is : ' || :my_sal);
+end;
+/
+
+
+-----------now this variable also use in another program-
+
+
+declare
+v_dept_id employees.department_id%type;
+
+begin
+select department_id,salary
+into v_dept_id, :my_sal
+from employees
+where employee_id=101;
+
+dbms_output.put_line('department id of employee is : ' || v_dept_id);
+dbms_output.put_line('salary of employee is : ' || :my_sal);
+end;
+
+
+
+==================================================================================DEFINE substituional variable==================
+
+
+we are using this when we need to execute the code with same substituional variable value 
+
+like for testing purpose
+
+define id=101;
+
+ declare
+   v_sal employees.salary%type;
+  begin
+  select salary
+ into v_sal
+from employees
+where employee_id=&id;
+  dbms_output.put_line(v_sal);
+  end;
+/
+
+
+
+SQL> define id= 100;  -------------------> now change the value of define variable
+
+old   7: where employee_id=&id;
+new   7: where employee_id=100;
+24000
+
+PL/SQL procedure successfully completed.
+
+SQL> undefine id; ------------------> now undefine it when our work is completed
+
+Enter value for id: 101  ---------------------> then it will ask the value of substituional variable
+old   7: where employee_id=&id;
+new   7: where employee_id=101;
+17000
+
+PL/SQL procedure successfully completed.
+
+
+===================================================================%rowtype==================================================
+
+declare
+v_rec employees%rowtype;
+begin
+select *
+into  v_rec from employees
+where employee_id=101;
+insert into retired_rec(empno, emp_name,emp_salary)
+values( v_rec.employee_id, v_rec.first_name, v_rec.salary);
+end;
+
+
+====================================================================================================== scope of the block ==============================
+DECLARE
+v_outer VARCHAR2(20) := 'outer variable';
+v_check VARCHAR2(20) := 'this is check';
+BEGIN
+DECLARE
+v_inner VARCHAR2(20) := 'inner variable';
+v_check VARCHAR2(20) := 'inner check';
+
+
+DBMS_OUTPUT.PUT_LINE(v_check); 
+DBMS_OUTPUT.PUT_LINE(v_outer); 
+END; 
+DBMS_OUTPUT.PUT_LINE(v_check); 
+ -- DBMS_OUTPUT.PUT_LINE(v_inner);
+END;
+
+====================================================================cursor=================================
+  IMPLICIT cursor-----------------------
+
+----------SQl%FOUND-----
+DECLARE
+  v_emp_id employees.employee_id%TYPE := 101; 
+  v_emp_name employees.first_name%TYPE;    
+BEGIN
+    SELECT first_name
+    INTO v_emp_name
+    FROM employees
+    WHERE employee_id = v_emp_id;
+    -- Check if the SELECT INTO found a row
+    IF SQL%FOUND THEN
+      DBMS_OUTPUT.PUT_LINE('Employee Found: ' || v_emp_name);
+    END IF;
+END;
+
+----------------SQl%FOUND
+begin
+ 
+  update employees
+  set salary = salary + 1000
+  where employee_id = 101;
+  if sql%found then
+    dbms_output.put_line('record updated successfully.');
+  else
+    dbms_output.put_line('no record updated.');
+  end if;
+end;
+/
+
+----------------------SQL%rowcount--------
+declare
+v_a number;
+   begin
+   delete from employees
+   where employee_id=9999;
+v_a:= SQL%ROWCOUNT;
+dbms_output.put_line('rows affected    ' || v_a);
+  end;
+/
+
+rows affected    0
+
+
+
+
+
+
+========================================explicit cursor=====================
+
+
+----------example 1-----------
+
+SQL> DECLARE
+  2    
+  3    CURSOR emp_rec IS
+  4      SELECT employee_id, first_name
+  5      FROM employees;
+  6
+  7   
+  8    v_empNo employees.employee_id%TYPE;
+  9    v_empName employees.first_name%TYPE;
+ 10
+ 11  BEGIN
+ 12   
+ 13    OPEN emp_rec;
+ 14
+ 15  
+ 16    LOOP
+ 17      FETCH emp_rec INTO v_empNo, v_empName;
+ 18
+ 19    
+ 20      EXIT WHEN emp_rec%NOTFOUND;
+ 21
+ 22     
+ 23      DBMS_OUTPUT.PUT_LINE('Employee ID: ' || v_empNo || ', Name: ' || v_empName);
+ 24    END LOOP;
+ 25
+ 26    
+ 27    CLOSE emp_rec;
+ 28  END;
+ 29  /
+
+
+----------------------------------------------
+Question : create a cursor for finding name of those employees getting second maximum salary
+      DECLARE
+      cursor emp_data is
+      select first_name, salary
+        from employees
+        where salary = (select max(salary)
+                        from employees
+                        where salary < (select max(salary)
+                                        from employees));
+  
+     v_first_emp_name employees.first_name%type;
+     v_sal employees.salary%type;
+   begin
+     open emp_data;
+     loop
+       fetch emp_data into v_first_emp_name, v_sal;
+       exit when emp_data%notfound;
+       dbms_output.put_line(v_first_emp_name || ' ' || v_sal);
+     end loop;
+     close emp_data;
+   end;
+ 
+------------------------------------------------------------------------------------
+
+question : find the department name and id from departments table;
+
+
+
+ DECLARE
+      CURSOR dept_data IS
+            SELECT department_id, department_name
+            FROM departments;
+  
+        dep_id departments.department_id%TYPE;
+        dep_name departments.department_name%TYPE;
+  
+    BEGIN
+       OPEN dept_data;
+ 
+       LOOP
+           FETCH dept_data INTO dep_id, dep_name;
+           EXIT WHEN dept_data%NOTFOUND;
+           DBMS_OUTPUT.PUT_LINE(dep_id || ' ' || dep_name);
+       END LOOP;
+ 
+       CLOSE dept_data;
+   END;
+
+
+-----------------------------------------------------------------------
+
+find department name manager id in desc order 
+
+declare
+  cursor employee_details is
+    select department_id, manager_id
+    from employees
+    order by manager_id desc;
+
+  v_dept employees.department_id%type;
+  v_mgr employees.manager_id%type;
+begin
+  open employee_details;
+  loop
+    fetch employee_details into v_dept, v_mgr;
+    exit when employee_details%notfound;
+    -- output the results
+    dbms_output.put_line('department id: ' || v_dept || ', manager id: ' || v_mgr);
+  end loop;
+  close employee_details;
+end;
+/
+
+----------------------------
+
+question:  salary of those employee who earn more than 5000
+
+declare
+cursor emp_cursor is
+select employee_id, first_name, salary
+from employees
+where salary > 5000;
+
+v_emp_id employees.employee_id%type;
+v_first_name employees.first_name%type;
+v_salary employees.salary%type;
+begin
+open emp_cursor;
+loop
+fetch emp_cursor into v_emp_id, v_first_name, v_salary;
+exit when emp_cursor%notfound;
+dbms_output.put_line('employee id: ' || v_emp_id || ', name: ' || v_first_name || ', salary: ' || v_salary);
+end loop;
+close emp_cursor;
+end;
+/
+
+-----------------------------------------------------------------------
+
+question  :  maximum salary for each departments
+
+declare
+cursor dept_salary_cursor is
+select department_id, max(salary) as max_salary
+from employees
+group by department_id;
+
+v_dept_id employees.department_id%type;
+v_max_salary employees.salary%type;
+begin
+open dept_salary_cursor;
+loop
+fetch dept_salary_cursor into v_dept_id, v_max_salary;
+exit when dept_salary_cursor%notfound;
+dbms_output.put_line('department id: ' || v_dept_id || ', max salary: ' || v_max_salary);
+end loop;
+close dept_salary_cursor;
+end;
+/
+
+
+-----------------------------------
+
+
+question :employees hired in 20006
+
+
+declare
+cursor emp_cursor is
+select employee_id, first_name, hire_date
+from employees
+where to_char( hire_date,'yyyy') = 2006;
+
+v_emp_id employees.employee_id%type;
+v_first_name employees.first_name%type;
+v_hire_date employees.hire_date%type;
+begin
+open emp_cursor;
+loop
+fetch emp_cursor into v_emp_id, v_first_name, v_hire_date;
+exit when emp_cursor%notfound;
+dbms_output.put_line('employee id: ' || v_emp_id || ' name ' || v_first_name || ' hire date: ' || v_hire_date);
+end loop;
+close emp_cursor;
+end;
+/
+
+\
+------------------------------------------
+
+employees whose salry in a range
+
+
+
+
+
+
+
+declare
+cursor emp_cursor is
+select employee_id, first_name, salary
+from employees
+where salary between 3000 and 7000;
+
+v_emp_id employees.employee_id%type;
+v_first_name employees.first_name%type;
+v_salary employees.salary%type;
+begin
+open emp_cursor;
+loop
+fetch emp_cursor into v_emp_id, v_first_name, v_salary;
+exit when emp_cursor%notfound;
+dbms_output.put_line('employee id: ' || v_emp_id || ' name ' || v_first_name || ' salary ' || v_salary);
+end loop;
+close emp_cursor;
+end;
+/
+
+
+--------------------------------------------------------
+
+employees count in each departments
+
+
+
+
+
+
+
+
+declare
+cursor dept_emp_count_cursor is
+select department_id, count(*) as emp_count
+from employees
+group by department_id;
+
+v_dept_id employees.department_id%type;
+v_emp_count number;
+begin
+open dept_emp_count_cursor;
+loop
+fetch dept_emp_count_cursor into v_dept_id, v_emp_count;
+exit when dept_emp_count_cursor%notfound;
+dbms_output.put_line('department id: ' || v_dept_id || ', employee count: ' || v_emp_count);
+end loop;
+close dept_emp_count_cursor;
+end;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
