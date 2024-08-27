@@ -381,7 +381,38 @@ end;
 
 
 =======================================================================
+ 
+Q. Write a program to tell the user whether he is major or minor. User will input the age. 
+    Qualifying age for major is 18 years. Create a table Check_age (age, result). 
+    Insert the age and result into the table. Result is major or minor. (Marks 2)
+Ans: 
 
+
+create procedure check_age_instr(
+    p_age number, p_result varchar2)
+    is
+    begin
+    insert into check_age(age,result) values(p_age,p_result);
+   end;
+
+
+
+declare
+v_age number(20);
+v_result varchar2(20);
+begin
+for i in 1..30 loop
+v_age := dbms_random.value(1, 30);
+if v_age > 18 then
+v_result := 'major';
+elsif v_age < 18 then
+v_result := 'minor';
+else
+v_result := 'unknown';
+end if;
+check_age_instr(v_age, v_result);
+end loop;
+end;
 
 
 
