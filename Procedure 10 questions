@@ -1,0 +1,417 @@
+ Assignment 26/08/24
+
+Name Tushar kumar
+3813
+
+
+question  :  create a procedure for finding the length of any name which user input;
+
+         create or replace procedure length_ex
+            (p_name varchar2 , p_len out number)
+            is
+            v_len number(20);
+            begin
+            v_len := length(p_name);
+            p_len := v_len;
+         end;
+
+
+----execution part----
+declare
+v_name varchar2(20) :='tushar kumar';
+v_len number;
+begin
+length_ex(v_name,v_len);
+dbms_output.put_line(v_len);
+end;
+
+
+
+by function
+
+
+
+
+    create  function length_ex1(p_name varchar2)
+    return number
+    is
+        v_len number;
+    begin
+        v_len := length(p_name);
+        return v_len;
+   end;
+
+
+
+DECLARE
+    v_result NUMBER;
+BEGIN
+    v_result := length_ex1('tushar kumar');
+    DBMS_OUTPUT.PUT_LINE(v_result);
+END;
+/
+
+===========================================================================================
+
+
+question : Create a procedure that takes a date as an IN parameter and returns the day of the week through an OUT parameter.
+
+create  or replace procedure date_ex
+(p_date date , p_day out varchar2)
+is
+v_day varchar2(15);
+begin
+v_day := to_char(p_date, 'day');
+p_day :=v_day;
+end;
+
+----execution part----
+
+declare 
+v_day varchar2(15);
+begin
+date_ex(sysdate,v_day);
+dbms_output.put_line(v_day);
+end;
+
+
+
+by function  ------------->
+ 
+create or replace function date_ex1(p_date date) 
+return varchar2 
+is
+    v_day varchar2(15);
+begin
+    v_day := to_char(p_date, 'day');
+    return v_day;  
+end;
+
+
+declare
+v_result varchar2(10);
+begin
+v_result :=date_ex2(sysdate);
+dbms_output.put_line(v_result);
+end;
+
+
+
+=================================================================================================
+
+
+Create a procedure that takes a string and returns the number of vowels in that string through an OUT parameter
+
+
+create or replace procedure count_vowels(
+    p_name in varchar2,
+    p_count out number
+) is
+    v_count number := 0; 
+begin
+
+    for i in 1..length(p_name) loop
+    
+        if substr(p_name, i, 1) in ('a', 'e', 'i', 'o', 'u', 
+                                    'A', 'E', 'I', 'O', 'U') then
+            v_count := v_count + 1; 
+        end if;
+    end loop;
+    p_count := v_count;
+end;
+
+----execution part-------
+
+declare
+ v_name varchar2(20) :='tushar kumar';
+v_count number(10) :=0;
+begin
+
+count_vowels(v_name , v_count);
+dbms_output.put_line(v_count);
+end;
+
+
+
+
+by function 
+
+create or replace function count_vowels2(p_name varchar2) 
+return number 
+is
+    v_count number := 0; 
+begin
+    for i in 1..length(p_name) loop
+        if substr(p_name, i, 1) in ('a', 'e', 'i', 'o', 'u', 
+                                    'A', 'E', 'I', 'O', 'U') then
+            v_count := v_count + 1; 
+        end if;
+    end loop;
+    return v_count;
+end;
+/
+
+
+
+declare
+v_result number(10);
+begin
+v_result :=count_vowels2('tushar kumar');
+dbms_output.put_line(v_result);
+end;
+
+
+
+===================================================================================================
+
+
+
+
+
+Q1 In iSQL*Plus, load the script lab_02_04_soln.sql that you created for question 4 of practice 2. 
+Modify the script to convert the anonymous block to a procedure called greet.
+Execute the script to create the procedure.
+Save your script as lab_09_01_soln.sql.
+Click the Clear button to clear the workspace.
+Create and execute an anonymous block to invoke the procedure greet. Sample output is shown below.
+
+
+Ans. 
+create or replace procedure greet as
+    today date := sysdate;          
+    tomorrow today%type;             
+	
+begin
+    tomorrow := today + 1;           
+    dbms_output.put_line('hello world');
+    dbms_output.put_line('today: ' || to_char(today, 'yyyy-mm-dd'));
+    dbms_output.put_line('tomorrow: ' || to_char(tomorrow, 'yyyy-mm-dd'));
+end;
+
+
+----execution part-------
+ begin
+    greet ;
+  
+    end ;
+
+------------------output ----
+
+hello world
+today: 2024-08-26
+tomorrow: 2024-08-27
+
+PL/SQL procedure successfully completed.
+
+
+=================================================================================================================
+
+
+Q2. Load the script lab_09_01_soln.sql. 
+Drop the procedure greet by issuing the following command:
+DROP PROCEDURE greet
+Modify the procedure to accept an argument of type VARCHAR2. Call the argument name.
+Print Hello <name> instead of printing Hello World. 
+Save your script as lab_09_02_soln.sql.
+Execute the script to create the procedure.
+Create and execute an anonymous block to invoke the procedure greet with a parameter. Sample output is shown below.
+
+Ans. 
+ drop procedure greet ;
+
+create or replace procedure greet(name in VARCHAR2) as
+    today date := sysdate;          
+    tomorrow today%type;             
+	
+begin
+    tomorrow := today + 1;           
+    dbms_output.put_line('Hello ' || name);
+    dbms_output.put_line('today: ' || to_char(today, 'yyyy-mm-dd'));
+    dbms_output.put_line('tomorrow: ' || to_char(tomorrow, 'yyyy-mm-dd'));
+end;
+
+----execution part-------
+
+    begin
+    greet('tushar');
+   end;
+
+------------------output ----
+Hello tushar
+today: 2024-08-26
+tomorrow: 2024-08-27
+
+
+===============================================================================================================
+
+reverse of string----
+
+
+    create or replace procedure reverse_str(
+    p_string in out varchar2
+) is
+    v_reversed_string varchar2(32767) := '';
+begin
+    for i in reverse 1..length(p_string) loop
+        v_reversed_string := v_reversed_string || substr(p_string, i, 1);
+    end loop;
+    p_string := v_reversed_string;
+end;
+
+
+
+----execution part-------
+
+      declare
+        v_str varchar2(20) :='tushar kumar';
+        begin
+        reverse_str(v_str);
+     dbms_output.put(v_str);
+     end;
+
+
+========================================================================================================================
+
+
+
+Create a procedure that takes a string and checks whether it is a palindrome. The procedure should return TRUE or FALSE 
+
+create or replace procedure check_palindrome(
+    p_string in varchar2,
+    p_is_palindrome out varchar2
+) is
+    v_reversed_string varchar2(32767) := '';
+begin
+    for i in reverse 1..length(p_string) loop
+        v_reversed_string := v_reversed_string || substr(p_string, i, 1);
+    end loop;
+
+    if p_string = v_reversed_string then
+        p_is_palindrome := 'true';
+    else
+        p_is_palindrome := 'false';
+    end if;
+end;
+
+
+
+----execution part-------
+
+  declare
+    v_str varchar2(20) :='tushar';
+    v_palindrome varchar2(60);
+    begin
+    check_palindrome(v_str,v_palindrome);
+    dbms_output.put_line(v_palindrome);
+  end;
+/
+
+
+============================================================perform dml by procedure===============================================
+
+create or replace procedure insert_emp(
+    p_empno in number,
+    p_name in varchar2
+) is
+begin
+    insert into emp (empno, name)
+    values (p_empno, p_name);
+end;
+/
+
+
+
+begin
+    insert_emp(1, 'John');
+    insert_emp(2, 'Jane');
+    insert_emp(3, 'Doe');
+end;
+/
+
+=================================================================for deleting some data================================
+
+
+create or replace procedure delete_emp(
+    p_empno in number  
+) is
+begin
+   delete from emp
+where empno =p_empno;
+end;
+
+
+
+
+
+begin
+    delete_emp(2);
+if sql%found then
+dbms_output.put_line('data is deleted');
+else
+dbms_output.put_line('data not found');
+end if;
+  
+end;
+
+
+
+===========================================================update======================
+
+
+create or replace procedure update_emp(
+    p_empno in number  
+) is
+begin
+   update emp
+set name ='vaibhav'
+where empno=p_empno;
+end;
+
+
+begin
+    update_emp(1);
+if sql%found then
+dbms_output.put_line('data is updated');
+else
+dbms_output.put_line('data not found');
+end if;
+  
+end;
+
+
+
+=======================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
