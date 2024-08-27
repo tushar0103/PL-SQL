@@ -415,7 +415,33 @@ end loop;
 end;
 
 
+===============================================================================================================
 
+declare
+  cursor c1 is
+    select employee_id, department_id, last_name, hire_date
+    from employees
+    order by department_id, hire_date;
+  v_dep_id employees.department_id%type := null;
+  v_count number := 0;
+begin
+  for v_rec in c1 loop
+    if v_dep_id is null or v_dep_id != v_rec.department_id then
+      v_dep_id := v_rec.department_id;
+      v_count := 1;  
+    else
+      v_count := v_count + 1;  
+    end if;
+    if v_count in (1, 3, 5) then
+      dbms_output.put_line(
+        'department id: ' || v_rec.department_id ||
+        ', employee id: ' || v_rec.employee_id ||
+        ', hire date: ' || v_rec.hire_date ||
+        ', last name: ' || v_rec.last_name
+      );
+    end if;
+  end loop;
+end;
 
 
 
