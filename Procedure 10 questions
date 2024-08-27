@@ -444,6 +444,31 @@ begin
 end;
 
 
+================================================================================
+Write a procedure to find out the employees who have joined in consecutive three  days.
+
+  create or replace procedure consecutive_employees is
+       cursor c1 is
+        select
+        e1.employee_id as emp1,
+        e2.employee_id as emp2,
+        e3.employee_id as emp3
+       from
+        example e1,example e2,example e3
+        where e2.hire_date = e1.hire_date + 1
+     and  e3.hire_date = e2.hire_date + 1
+      order by
+      e1.hire_date;
+      v_rec c1%rowtype;
+     begin
+     open c1;
+      loop
+     fetch c1 into v_rec;
+     exit when c1%notfound;
+      dbms_output.put_line('employee 1 => '|| v_rec.emp1 || '  employee 2 =>  ' || v_rec.emp2 || ' employee 3 => ' || v_rec.emp3);
+      end loop;
+      close c1;
+    end;
 
 
 
