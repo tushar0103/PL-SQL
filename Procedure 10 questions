@@ -471,6 +471,30 @@ Write a procedure to find out the employees who have joined in consecutive three
     end;
 
 
+========================================================================================================
+
+if we want to insert a default value in a papameter  than wwe use named notation
+
+create or replace procedure insert_data(
+    p_lastname in varchar2 default 'singh',
+    p_email in varchar2,
+    p_hiredate in date,
+    p_jobid in varchar2
+) is
+begin
+    insert into duplicate_emp (last_name, email, hire_date, job_id)
+    values (p_lastname, p_email, p_hiredate, p_jobid);
+end;
+
+
+
+begin
+   
+    insert_data(
+        p_email => 'jane.doe@example.com', p_hiredate => to_date('2024-08-27', 'YYYY-MM-DD'),p_jobid => 'DEV'  );  
+end;
+
+
 
 
 
