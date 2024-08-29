@@ -1,0 +1,83 @@
+create or replace package areas
+   is
+    function square_area (p_side number) return number;
+    function rectangle_area (p_length number,p_bredth number) return number;
+    function triangle_area (p_base number,p_height number) return number;
+     function circle_area (p_radius number) return number;
+    function cube_area (p_side number) return number;
+   end;
+
+------------------------------------------------------
+
+
+
+  create or replace package body areas
+    is
+      function square_area(p_side number) return number
+      is
+      begin
+        return p_side * p_side;
+      end ;
+
+       function rectangle_area (p_length number,p_bredth number) return number
+      is
+       v_area number;
+     begin
+       v_area := p_length * p_bredth;
+       return v_area;
+     end ;
+
+     function triangle_area(p_base number, p_height number) return number
+     is
+       v_area number;
+     begin
+       v_area := 0.5  p_base  p_height;
+       return v_area;
+     end ;
+
+     function circle_area(p_radius number) return number
+    is
+       pi constant number := 3.14;
+       v_area number;
+     begin
+       v_area := pi  p_radius  p_radius;
+       return v_area;
+     end;
+
+     function cube_area(p_side number) return number
+     is
+       v_area number;
+     begin
+       v_area := 6  p_side  p_side;
+       return v_area;
+     end ;
+  end areas;
+
+
+
+------------------------------------------------
+
+
+
+
+declare
+v_area_triangle number;
+v_area_circle number;
+v_area_cube number;
+v_area_rectangle number;
+v_area_square number;
+begin
+v_area_triangle :=areas.triangle_area(2,5);
+dbms_output.put_line(' Area of triangle is : ' ||v_area_triangle);
+v_area_circle :=areas.circle_area(9);
+dbms_output.put_line(' Area of circle is : ' ||v_area_circle);
+v_area_cube :=areas.cube_area(5);
+dbms_output.put_line(' Area of cube is : ' ||v_area_cube);
+v_area_rectangle :=areas.rectangle_area(7,5);
+dbms_output.put_line(' Area of rectangle is : ' ||v_area_rectangle );
+v_area_square :=areas.square_area(5);
+dbms_output.put_line(' Area of square is : ' ||v_area_square );
+end;
+/me 
+
+======+++++++++++++++++++++++++++++++++++==============================++++++++++++++++++++++===========================+++++++++++++++++++++++=========++======================
