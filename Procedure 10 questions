@@ -494,6 +494,158 @@ begin
         p_email => 'jane.doe@example.com', p_hiredate => to_date('2024-08-27', 'YYYY-MM-DD'),p_jobid => 'DEV'  );  
 end;
 
+===================================================================================================================================
+
+LEsson 2 function
+
+question 1 : Create and invoke the GET_JOB function to return a job title.
+a.	Create and  compile a function called GET_JOB to return a job title.
+b.	Create a VARCHAR2 host variable called TITLE, allowing a length of 35 characters. Invoke the function with SA_REP job ID to return the value in the host variable. Print the host variable to view the result.
+
+
+answer ;
+
+
+
+
+create or replace function get_job(p_jobid number)
+return varchar2
+is
+  v_jobtitle jobs.job_title%type;
+begin
+  select job_title into v_jobtitle
+  from jobs
+  where job_id = p_jobid;
+
+  return v_jobtitle;
+exception
+  when no_data_found then
+   dbms_output.put_line('job id not found'); 
+end;
+
+variable title varchar2;
+
+VARIABLE title VARCHAR2;
+BEGIN
+  :title := get_job('SA_REP'); 
+  dbms_output.put_line('Job title of this ID is: ' || :title);
+END;
+
+
+
+---------------------------------------------------------------------------------------------------------------------------
+
+
+question 2 : Create a function called GET_ANNUAL_COMP to return the annual salary computed from an employee’s monthly salary and commission passed as parameters.
+a.	Develop and store the function GET_ANNUAL_COMP, accepting parameter values for monthly salary and commission. 
+         Either or both values passed can be NULL, but the function should still return a non-NULL annual salary. Use the following basic formula to calculate the annual salary:
+		(salary*12) + (commission_pct*salary*12)
+b.	Use the function in a SELECT statement against the EMPLOYEES table for employees in department 30.
+
+
+
+answer : 
+
+
+create or replace function GET_ANNUAL_COMP (p_sal number, p_comm number)
+return number
+is
+v_sal employees.salary%type;
+v_comm employees.commission_pct%type;
+begin
+v_sal := nvl(p_sal, 0);
+v_comm := nvl(p_comm,0);
+return (v_sal*12) + (v_comm*v_sal*12);
+end;
+
+
+
+
+select employee_id, last_name,GET_ANNUAL_COMP(salary, commission_pct) as "anuual salary"
+from employees
+where department_id=30;
+
+
+
+
+-------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+queestion : 	
+
+Create a procedure, ADD_EMPLOYEE, to insert a new employee into the EMPLOYEES table. The procedure should call a VALID_DEPTID function to check whether the department ID specified for the new employee exists in the DEPARTMENTS table.
+a.	Create a function VALID_DEPTID to validate a specified department ID and return a BOOLEAN value of TRUE if the department exists.
+
+b.	Create the procedure ADD_EMPLOYEE to add an employee to the EMPLOYEES table. The row should be added to the EMPLOYEES table if the VALID_DEPTID function returns TRUE; otherwise, alert the user with an appropriate message. Provide the following parameters (with defaults specified in parentheses): first_name, last_name, email, job (SA_REP), mgr (145), sal (1000), comm (0), and deptid (30). Use the EMPLOYEES_SEQ sequence to set the employee_id column, and set hire_date to TRUNC(SYSDATE).
+
+c.	Call ADD_EMPLOYEE for the name Jane Harris in department 15, leaving other parameters with their default values. What is the result?
+d.	Add another employee named Joe Harris in department 80, leaving remaining parameters with their default values. What is the result?
+
+
+anwer :
+
+
+create or replace function valid_deptid(p_deptid number)
+return boolean
+is
+  v_count number;
+begin
+  select count(*)
+  into v_count
+  from departments
+  where department_id = p_deptid;
+  if v_count > 0 then
+    return true;
+  else
+    return false;
+  end if;
+exception
+  when others then
+    return false;
+end;
+/
+------------------------------------------------------
+create or replace procedure ADD_EMPLOYEE (
+p_first_name varchar2, p_last_name varchar2, p_email varchar2, p_jobid varchar2 default 'SA_REP', p_mgrid number default 145, p_sal number default 1000, p_comm number default 0,p_deptid number default 30
+)
+
+is
+begin
+if valid_deptid(p_deptid ) then
+insert into employees(first_name, last_name, email, job_id, manager_id, salary, commission_pct, department_id)
+values (p_first_name,p_last_name,p_email,p_jobid,p_mgrid, p_sal,p_comm,p_deptid);
+
+else
+dbms_output.put_line('this is not valid department id');
+end if;
+end;
+---------------------------------------------------------------
+
+BEGIN
+  add_employee(
+    p_first_name => 'Jane',
+    p_last_name => 'Harris',
+    p_email => 'edhdbh@de.com',             
+    p_deptid => 15             
+  );
+END;
+
+
+output is :  this is not valid department id
+
+------------------------------------------------------------------------------------------------------
+
+
+BEGIN
+  add_employee(
+    p_first_name => 'Jane',
+    p_last_name => 'Harris',
+    p_email => 'edhdbh@de.com',             
+    p_deptid => 80             
+  );
+END;
 
 
 
