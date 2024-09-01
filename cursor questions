@@ -1,0 +1,524 @@
+  1.Write a PL/SQL block that declares an explicit cursor to fetch employee details (employee ID, name, and salary) from the employees table and prints each employee's details.
+
+declare
+v_empid   employees.employee_id%type ; 
+v_lname   employees.last_name%type ;
+v_sal     employees.salary%type;
+cursor c1  is 
+select employee_id , last_name , salary from employees;
+begin 
+open c1;
+loop 
+fetch c1 into v_empid , v_lname , v_sal  ;
+exit when c1%notfound;
+dbms_output.put_line(v_empid || ' - '|| v_lname || ' --> ' || v_sal);
+end loop;
+dbms_output.put_line('total number of records fetched --> '  || c1%rowcount);
+close c1;
+end;
+
+  2.Create a PL/SQL block that declares a cursor with a parameter to fetch employee details for a specific department. 
+The department ID should be passed as a parameter to the cursor.
+
+declare
+  emp_rec employees%rowtype;
+  cursor c1(deptid number) is
+    select employee_id, last_name
+    from employees
+    where department_id = deptid;
+  
+  v_dept_id number := &id;
+
+begin
+  open c1(v_dept_id);
+  loop
+    fetch c1 into emp_rec;
+    exit when c1%notfound;
+    dbms_output.put_line(emp_rec.employee_id || '-->' || emp_rec.last_name);
+  end loop;
+  close c1;
+end;
+/
+
+
+  3.Write a PL/SQL block that uses a FOR loop to iterate through an explicit cursor that fetches all employees with a salary greater than a specified amount. 
+Print the employee ID and name.
+
+declare
+    v_sal employees.salary%type;
+    v_lname employees.last_name%type;
+    cursor c1 (greater number) is 
+        select last_name, salary 
+        from employees 
+        where salary > greater;
+    v_big number := &enter_the_salary_to_get_employees_who_have_more_salary_than_this;
+begin
+    for emp_rec in c1(v_big) loop
+        v_lname := emp_rec.last_name;
+        v_sal := emp_rec.salary;
+        dbms_output.put_line(v_lname || ' --> ' || v_sal);
+    end loop;
+end;
+/
+
+/
+
+  4. Write an anonymous block to print department wise senior most employees with department name. If in any department, 
+no employees are working than print “No employee in this department.
+
+declare
+    cursor c1 is
+        select *
+        from departments;
+    cursor c2 (deptid number) is
+        select *
+        from employees
+        where department_id = deptid
+        order by hire_date asc
+        fetch first 1 row only;
+    dept_rec departments%rowtype;
+    emp_rec employees%rowtype;
+begin
+    open c1;
+    loop
+        fetch c1 into dept_rec;
+        exit when c1%notfound;
+        dbms_output.put_line('department name: ' || dept_rec.department_name);
+        open c2(dept_rec.department_id);
+        fetch c2 into emp_rec;
+        if c2%found then
+            dbms_output.put_line('    senior most employee id: ' || emp_rec.employee_id ||' name: ' || emp_rec.last_name ||' hire date: ' || emp_rec.hire_date);
+        else
+            dbms_output.put_line('    no employee in this department.');
+        end if;
+        close c2;
+    end loop;
+    close c1;
+end;
+/
+
+
+  5.Create a PL/SQL block with an explicit cursor that fetches the employee details based on employee ID.
+ Handle the case where no data is found for the given ID and print an appropriate message.
+
+declare 
+emp_rec    employees%rowtype ;
+cursor c1 (empid number)is 
+select * from employees 
+where employee_id = empid;
+v_empid number := &enter_employee_id ; 
+v_flag boolean ; 
+begin
+open c1 (v_empid);
+loop 
+v_flag := false ;
+fetch c1 into emp_rec ;
+exit when c1%notfound ; 
+dbms_output.put_line('Employee_id --> ' || emp_rec.employee_id || 'last Name --> ' || emp_rec.last_name ||
+			'Salary --> ' || emp_rec.salary ||
+			'department_id --> ' || emp_rec.department_id ||
+			'job_id --> ' || emp_rec.job_id );
+	  v_flag := true ; 
+end loop ; 
+if not v_flag then
+dbms_output.put_line('No employee found with this empid');
+end if ;
+close c1 ; 
+end ; 
+/
+
+
+   6.Write a PL/SQL block that declares a cursor to select employees from a specific department and updates their salary by 10%. Print the details of each updated employee.
+
+   declare
+    emp_rec    employees%rowtype ;
+    cursor c1 (deptid  number) is
+    select *
+    from employees where department_id = deptid ;
+    v_deptid number := &enter_department_id ;
+    begin
+    open c1 (v_deptid);
+    loop
+   fetch c1 into emp_rec ;
+   exit when c1%notfound ;
+   update employees
+   set commission_pct = commission_pct * 1.1
+   where employee_id = emp_rec.employee_id ;
+          DBMS_OUTPUT.PUT_LINE('Employee ID: ' || emp_rec.employee_id ||
+                                ', Last Name: ' || emp_rec.last_name ||
+                                ', New Commission: ' || emp_rec.commission_pct * 1.10);
+   end loop ;
+   close c1 ;
+  end ;
+
+   7.Write a PL/SQL block that declares a cursor to fetch employee details and performs two consecutive fetch operations to print employee details twice.
+
+declare 
+emp_rec employees%rowtype ; 
+cursor c1 (empid number) is 
+select * from employees where employee_id = empid ; 
+
+v_empid number := &enter_employee_id;
+begin
+    open c1(v_empid);
+    fetch c1 into emp_rec;
+    if c1%found then
+        dbms_output.put_line('first fetch - employee id: ' || emp_rec.employee_id ||
+                             ', last name: ' || emp_rec.last_name ||
+                             ', salary: ' || emp_rec.salary);
+        fetch c1 into emp_rec;
+        if c1%found then
+            dbms_output.put_line('second fetch - employee id: ' || emp_rec.employee_id ||
+                                 ', last name: ' || emp_rec.last_name ||
+                                 ', salary: ' || emp_rec.salary);
+        else
+            dbms_output.put_line('second fetch: no additional record found.');
+        end if;
+    else
+        dbms_output.put_line('no record found for employee id: ' || v_empid);
+    end if;
+    close c1;
+end;
+
+  8.Create a PL/SQL block with an explicit cursor to fetch employees who have the maximum salary in their department.
+ Use the cursor to print the details of these employees.
+
+declare
+    v_max_salary employees.salary%type;
+    cursor c1 (deptid number) is
+        select max(salary) as max_salary
+        from employees
+        where department_id = deptid;
+    v_deptid number := &enter_department_id;
+begin
+    open c1(v_deptid);
+    fetch c1 into v_max_salary;
+  if c1%found then 
+        dbms_output.put_line('max salary of this department is: ' || v_max_salary);
+end if ;
+    close c1;
+end;
+/
+
+
+
+  9. Write a PL/SQL block that declares a cursor with two parameters: a department ID and a minimum salary. The cursor should fetch employee details 
+(employee ID, name, and salary) for employees in the specified department who earn more than the specified minimum salary. Print each employee's details
+
+declare
+    v_deptid number := &enter_department_id;
+    v_sal  number  := &enter_salary;
+
+    cursor c1 (deptid number, sal number) is
+        select employee_id, last_name, salary
+        from employees
+        where department_id = deptid
+          and salary > sal;
+
+    emp_rec c1%rowtype;
+begin
+    open c1(v_deptid, v_sal);
+    loop
+        fetch c1 into emp_rec;
+        exit when c1%notfound;
+        dbms_output.put_line('employee id -> ' || emp_rec.employee_id ||' last name -> ' || emp_rec.last_name ||' salary -> ' || emp_rec.salary);
+    end loop;
+    close c1;
+end;
+
+
+  10. Create a PL/SQL block that declares a cursor to fetch employee details (employee ID, name, and salary) and orders the results by salary in descending order. Print each employee's details
+
+declare
+    cursor c1 is
+        select * from employees 
+	order by salary desc ; 
+    emp_rec c1%rowtype;
+begin
+    open c1;
+    loop
+        fetch c1 into emp_rec;
+        exit when c1%notfound;
+        dbms_output.put_line('employee id -> ' || emp_rec.employee_id ||' last name -> ' || emp_rec.last_name ||' salary -> ' || emp_rec.salary);
+    end loop;
+    close c1;
+end;
+/
+
+
+   11. Write a program to display all employees whose salary is higher than the given salary (parameter should be passed to given salary)
+
+declare 
+cursor c1 (sal number) is 
+select * from employees 
+where salary > sal ;
+emp_rec   employees%rowtype ; 
+
+v_greater_sal number :=&enter_the_salary_to_get_employees_who_have_more_salary_than_this;
+begin
+open c1 (v_greater_sal);
+loop 
+fetch c1 into emp_rec ;
+exit when c1%notfound ;
+dbms_output.put_line('employee id -> ' || emp_rec.employee_id ||' last name -> ' || emp_rec.last_name ||' salary -> ' || emp_rec.salary);
+    end loop;
+    close c1;
+end;
+/
+
+
+
+
+   12. Create a PL/SQL block that declares a cursor to fetch employees with a specific job title and then updates their salary by a percentage specified by a variable. Print the details of each updated employee
+
+declare 
+cursor c1 (jobid varchar2) is 
+select * from employees 
+where job_id = jobid ; 
+
+emp_rec employees%rowtype; 
+v_jobid   varchar2 :=&enter_job_id ;
+updatesal number := &what_%_do_you_want_to_update;
+
+begin 
+open c1 (v_jobid); 
+loop 
+fetch c1 into emp_rec ; 
+exit when c1%notfound ;
+update employees 
+set salary = salary * ( 1 + updatesal/100);
+where job_id = v_jobid;
+
+dbms_output.put_line('Employee ID: ' || emp_rec.employee_id ||
+                                ', Last Name: ' || emp_rec.last_name ||
+                                ', New sal: ' || emp_rec.salary * ( 1 + updatesal/100));
+   end loop ;
+   close c1 ;
+  end ;
+ 
+
+  13. Write a PL/SQL block that uses a cursor to fetch employee details with a salary greater than a specified amount and handles multiple records using a loop. 
+
+declare
+v_lname   employees.last_name%type ;
+v_sal   employees.salary%type;
+cursor c1 (greater number) is 
+select last_name , salary from employees where salary > greater ;
+v_big number := &enter_the_salary_to_get_employees_who_have_more_salary_than_this;
+begin 
+open c1(v_big);
+loop 
+fetch c1 into v_lname , v_sal ;
+exit when c1%notfound;
+dbms_output.put_line(v_lname || ' --> ' || v_sal);
+end loop;
+close c1;
+end;
+/
+
+  14. Create a PL/SQL block that uses dynamic SQL to declare a cursor based on user input (e.g., department ID). Fetch employee details and print them. Allow the user to specify the department ID at runtime
+
+declare
+cursor c1 (deptid number) is 
+select first_name , last_name , employee_id 
+from employees 
+where department_id = deptid ;
+
+emp_rec  c1%rowtype ; 
+v_deptid number := &enter_department_id ; 
+
+begin
+dbms_output.put_line(' FIRST NAME  ' || ' LAST NAME  ' || 'EMPID') 
+open c1 (v_deptid);
+loop 
+fetch c1 into emp_rec ;
+dbms_output.put_line(emp_rec.first_name || '--'  || emp_rec.last_name || '--' ||  emp_rec.employee_id);
+end loop ;
+close c1 ; 
+end ;  
+
+  15. Write a PL/SQL block that declares a cursor to fetch the average salary of employees in a specific department. Print the average salary and handle the case where no employees are in the department
+
+declare
+    cursor c1 (deptid number) is
+        select d.department_name, avg(e.salary) as avg_salary
+        from employees e, departments d
+        where e.department_id = d.department_id
+        and d.department_id = deptid
+        group by d.department_name;
+
+    emp_rec c1%rowtype;
+    v_deptid number := &enter_dept_id;
+begin
+    open c1(v_deptid);
+    fetch c1 into emp_rec;
+    if c1%notfound then
+        dbms_output.put_line('No employees found in the specified department.');
+    else
+        dbms_output.put_line('Department Name: ' || emp_rec.department_name);
+        dbms_output.put_line('Average Salary: ' || emp_rec.avg_salary);
+    end if;
+    close c1;
+end;
+/
+
+
+  16. Create a PL/SQL block that declares a cursor to fetch employee details along with their department names using a JOIN between the employees and departments tables. Print each employee's details along with their department name
+
+declare
+    cursor c1 is
+        select e.employee_id , e.last_name , d.department_name , d.department_id 
+        from employees e, departments d
+        where e.department_id = d.department_id;
+emp_rec   c1%rowtype ;
+begin 
+open c1 ;
+loop 
+fetch c1 into emp_rec ; 
+exit when c1%notfound ; 
+dbms_output.put_line(emp_rec.employee_id || '--' || emp_rec.last_name || '--' || emp_rec.department_name || '--' || emp_rec.department_id);
+end loop ;
+close c1 ; 
+end ; 
+/
+
+
+  17. Create a PL/SQL block that declares a cursor to fetch employee details including the total number of employees and their average salary per department. Print each department's details along with the total number of employees and average salary.
+declare
+    cursor c1 is 
+        select department_id, department_name 
+        from departments;
+    cursor c2 (deptid number) is
+        select count(*) as total_employees, round(avg(salary)) as avg_salary
+        from employees
+        where department_id = deptid;
+    dept_rec c1%rowtype;
+    emp_rec c2%rowtype;
+begin
+    open c1;
+    loop
+        fetch c1 into dept_rec;
+        exit when c1%notfound;
+        dbms_output.put_line('Department Name: ' || dept_rec.department_name);
+        open c2(dept_rec.department_id);
+        fetch c2 into emp_rec;
+        if c2%found then
+            dbms_output.put_line('  Total Employees: ' || emp_rec.total_employees);
+            dbms_output.put_line('  AvfSalary: ' || emp_rec.avg_salary);
+        else
+            dbms_output.put_line('  No employees found in this department.');
+        end if;
+        close c2;
+    end loop;
+    close c1;
+end;
+/
+
+
+  18. Create a PL/SQL block that declares a cursor with parameters to fetch employee details based on department ID and job title. Fetch and print details for each employee who matches the criteria. Use multiple fetch operations within the same block if needed.
+
+declare
+    cursor c1 (p_deptid number, p_jobtitle varchar2) is
+        select employee_id, first_name, last_name, job_id, salary
+        from employees
+        where department_id = p_deptid
+        and job_id = p_jobtitle;
+    emp_rec c1%rowtype;
+    v_deptid number := &enter_dept_id;
+    v_jobtitle varchar2(50) := &enter_job_title;
+begin
+    open c1(v_deptid, v_jobtitle);
+    loop
+        fetch c1 into emp_rec;
+        exit when c1%notfound;
+        dbms_output.put_line('Employee ID: ' || emp_rec.employee_id ||', First Name: ' || emp_rec.first_name ||', Last Name: ' || emp_rec.last_name ||', Job Title: ' || emp_rec.job_id || ', Salary: ' || emp_rec.salary);
+    end loop;
+    close c1;
+end;
+
+  19 . How would you update the job title of employees who have been with the company for more than 10 years using a cursor
+
+declare
+    cursor c1 is
+        select *
+        from employees
+        where hire_date <= add_months(sysdate, -120);
+    emp_rec employees%rowtype;
+begin
+    open c1;
+    loop
+        fetch c1 into emp_rec;
+        exit when c1%notfound;
+        update employees
+        set job_id = 'SENIOR'
+        where employee_id = emp_rec.employee_id;
+        dbms_output.put_line('Updated Employee ID: ' || emp_rec.employee_id ||
+                             ', New Job Title: SENIOR');
+    end loop;
+    close c1;
+end;
+
+
+20.   - Write a PL/SQL block that uses a cursor to fetch the top 3 highest-paid employees in each department. Print their employee ID, name, and salary.
+
+declare 
+cursor c1 is 
+select department_name , department_id from departments ;
+
+cursor c2 (deptid number) is 
+select employee_id , last_name , salary , salary 
+from employees 
+where department_id = deptid 
+order by salary desc 
+fetch first 3 row only ; 
+
+dept_rec  c1%rowtype ;
+emp_rec   c2%rowtype; 
+
+begin 
+
+open c1 ;
+loop 
+fetch c1 into dept_rec ;
+exit when c1%notfound ;
+  dbms_output.put_line('department name: ' || dept_rec.department_name);
+
+open c2(dept_rec.department_id) ;
+fetch c2 into emp_rec ; 
+exit when c2%notfound
+dbms_output.put_line(emp_rec.employee_id || '---' || emp_rec.last_name || '-->' || emp_rec.salary);
+close c2 ; 
+end loop ;
+close c1 ;
+end ; 
+
+
+
+21.  Write a PL/SQL block that uses a cursor to identify departments where more than 5 employees have a salary greater than $100,000. Print the department ID and the count of such high earners.
+
+22.  Fetch all manager wise employees giving the count of all employees working under specific manager id 
+
+declare
+  cursor emp_cursor(p_manager_id number) is
+    select employee_id, last_name
+    from employees
+    where manager_id = p_manager_id;
+  v_manager_id number;
+  v_counter number := 0;
+  cursor man_cursors is
+    select distinct manager_id
+    from employees;
+begin
+  for v_man in man_cursors loop
+    v_counter := 0;
+    dbms_output.put_line('manager id. ' || v_man.manager_id || ', employees working under him/her are.' || chr(13));
+
+    for emp_record in emp_cursor(v_man.manager_id) loop
+      v_counter := v_counter + 1;
+      dbms_output.put_line('employee id: ' || emp_record.employee_id || ', last name: ' || emp_record.last_name);
+    end loop;
+    dbms_output.put_line('count of employees working under ' || v_man.manager_id || ' is ' || v_counter || chr(13));
+    dbms_output.put_line (chr(10));
+  end loop;
+end;
+
