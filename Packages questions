@@ -81,3 +81,98 @@ end;
 /me 
 
 ======+++++++++++++++++++++++++++++++++++==============================++++++++++++++++++++++===========================+++++++++++++++++++++++=========++======================
+
+
+Create a package specification and body called JOB_PKG, containing a copy of your ADD_JOB, UPD_JOB, and DEL_JOB procedures as well as your GET_JOB function.
+
+a.	Create the package specification including the procedures and function headings as public constructs.
+	Note: Consider whether you still need the stand-alone procedures and functions you just packaged.
+
+b.	Create the package body with the implementations for each of the subprograms.
+
+c.	Invoke your ADD_JOB package procedure by passing the values IT_SYSAN andSYSTEMS ANALYST as parameters.
+d.	Query the JOBS table to see the result.
+
+
+-------------
+
+
+create or replace package job_pkg as
+    procedure add_job(p_job_id in varchar2, p_job_title in varchar2);
+
+    procedure upd_job(p_job_id in varchar2, p_job_title in varchar2);
+
+  
+    procedure del_job(p_job_id in varchar2);
+
+   
+    function get_job(p_job_id in varchar2) return varchar2;
+end job_pkg;
+/
+------------------------body-----
+
+create or replace package body job_pkg as
+
+   
+    procedure add_job(p_job_id in varchar2, p_job_title in varchar2) is
+    begin
+        insert into jobs (job_id, job_title)
+        values (p_job_id, p_job_title);
+    exception
+        when dup_val_on_index then
+            dbms_output.put_line('job id already exists.');
+        
+    end add_job;
+
+
+    procedure upd_job(p_job_id in varchar2, p_job_title in varchar2) is
+    begin
+        update jobs
+        set job_title = p_job_title
+        where job_id = p_job_id;
+    exception
+        when no_data_found then
+            dbms_output.put_line('job id does not exist.');
+       
+    end upd_job;
+
+ 
+    procedure del_job(p_job_id in varchar2) is
+    begin
+        delete from jobs
+        where job_id = p_job_id;
+    exception
+        when no_data_found then
+            dbms_output.put_line('job id does not exist.');
+        
+    end del_job;
+
+  
+    function get_job(p_job_id in varchar2) return varchar2 is
+        v_job_title varchar2(100);
+    begin
+        select job_title
+        into v_job_title
+        from jobs
+        where job_id = p_job_id;
+        
+        return v_job_title;
+    exception
+        when no_data_found then
+            return null;
+       
+    end get_job;
+
+end job_pkg;
+
+
+
+-------------------------
+
+
+begin
+
+    job_pkg.add_job('it_sysan', 'systems analyst');
+end;
+
+select * from jobs;
