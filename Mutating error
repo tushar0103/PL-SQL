@@ -1,0 +1,30 @@
+create or replace trigger check_salary_increase
+after update on employees
+for each row
+declare
+v_count number;
+begin
+select count(*)
+into v_count
+from employees
+where department_id = :new.department_id;
+
+if v_count > 10 then
+update employees
+set salary = salary * 1.10
+where employee_id = :new.employee_id;
+end if;
+end;
+/
+
+
+  1  UPDATE employees
+  2  SET salary = salary + 1000
+  3* WHERE department_id = 30
+SQL> /
+UPDATE employees
+       *
+ERROR at line 1:
+ORA-04091: table MAKESS.EMPLOYEES is mutating, trigger/function may not see it
+ORA-06512: at "MAKESS.CHECK_SALARY_INCREASE", line 5
+ORA-04088: error during execution of trigger 'MAKESS.CHECK_SALARY_INCREASE'
