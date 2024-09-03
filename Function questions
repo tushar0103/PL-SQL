@@ -1,0 +1,12 @@
+create or replace function leap_year(p_year DATE) return char 
+is 
+begin 
+if 
+mod(to_char(p_year, 'YYYY'),4) = 0 
+then return (to_char(p_year, 'YYYY') || ', is a leap year'); 
+else 
+ return (to_char(p_year, 'YYYY') || ', is not a leap year');
+end if;
+end leap_year; 
+
+select hire_date, leap_year(hire_date) from employees;
