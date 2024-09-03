@@ -1,0 +1,322 @@
+
+Assignment 
+
+
+create table emp(
+name varchar2(20),
+id  number(10),
+dep_id number(10),
+salary number(10)
+);
+
+
+Question 1 :  if you attempt to insert a record into the emp table on a Monday then it will show "this is not Business day"; 
+
+create or replace  trigger valid_day
+before insert on emp
+begin
+if to_char(sysdate,'dy') ='mon' then
+raise_application_error(-20201,'This is not a business day');
+
+end if;
+end;
+
+SQL> insert into emp values('Tushar',20,30,10000);
+insert into emp values('Tushar',20,30,10000)
+            *
+ERROR at line 1:
+ORA-20201: This is not a business day
+ORA-06512: at "MAKESS.VALID_DAY", line 3
+ORA-04088: error during execution of trigger 'MAKESS.VALID_DAY'
+
+--------------------------------------------------------conditional predicates-----------------------------
+
+question: USing conditional predicate
+
+create or replace  trigger secure_emp
+before  insert or update or delete on emp
+begin
+if to_char(sysdate,'dy')='mon' then
+if inserting then
+   raise_application_error(-20501,'This is not a business day');
+elsif deleting then
+   raise_application_error(-20502,'This is not a business day');
+elsif updating then
+   raise_application_error(-20503,'This is not a business day');
+end if;
+end if;
+end;
+
+
+================================================================================
+
+create table emp(
+name varchar2(20),
+id  number(10),
+dep_id number(10),
+salary number(10)
+);
+
+create table audit_employee(
+name varchar2(20),
+operation varchar2(20)
+);
+
+
+
+create or replace trigger audit_emp_changes
+before insert or delete or update on emp
+begin
+  declare
+  v_operation varchar2(20);
+  begin
+ if inserting then
+   v_operation :='INSERT';
+   elsif deleting then
+   v_operation :='DELETE';
+   elsif updating then 
+   v_operation :='UPDATE';
+end if;
+    insert into audit_employee(name,operation) values('emp',v_operation);
+end;
+end;
++++++++++++++++++output   
+SQL> insert into emp values('tushar',20,30,60000);
+
+1 row created.
+
+SQL> update emp set name='harsh' where id=20;
+
+1 row updated.
+
+SQL> select * from audit_employee;
+
+NAME                 OPERATION
+-------------------- --------------------
+emp                  INSERT
+emp                  UPDATE
+
+
+
+===========================================================for eachrow======================================
+
+
+
+CREATE OR REPLACE TRIGGER restrict_salary1
+BEFORE INSERT OR UPDATE ON emp
+FOR EACH ROW
+BEGIN
+    IF :NEW.id NOT IN (20, 30) AND :NEW.salary > 5000 THEN
+        RAISE_APPLICATION_ERROR(-20201, 'Employee cannot earn more than 5000');
+    END IF;
+END;
+
+
+
+  1* insert into emp values('tushar',50,60,60000)
+SQL> /
+insert into emp values('tushar',50,60,60000)
+            *
+ERROR at line 1:
+ORA-20201: Employee cannot earn more than 5000
+ORA-06512: at "MAKESS.RESTRICT_SALARY1", line 3
+
+
+
+
+--------------------------------------------------------------------------
+
+The rows in the JOBS table store a minimum and maximum salary allowed for different JOB_ID values. You are asked to write code to ensure that employees’ salaries fall in the range allowed for their job type, for insert and update operations.
+
+a.Write a procedure called CHECK_SALARY that accepts two parameters, one for an employee’s job ID string and the other for the salary. The procedure uses the job ID to determine the minimum and maximum salary for the specified job. If the salary parameter does not fall within the salary range of the job, inclusive of the minimum and maximum, then it should raise an application exception, with the message “Invalid salary <sal>. Salaries for job <jobid> must be between <min> and <max>”. Replace the various items in the message with values supplied by parameters and variables populated by queries.
+
+b.Create a trigger called CHECK_SALARY_TRG on the EMPLOYEES table that fires before an INSERT or UPDATE operation on each row. The trigger must call the CHECK_SALARY procedure to carry out the business logic. The trigger should pass the new job ID and salary to the procedure parameters.
+
+
+----answer
+
+create or replace procedure CHECK_SALARY (p_job_id varchar, p_salary number)
+is
+v_min_sal jobs.min_salary%type;
+v_max_sal jobs.max_salary%type;
+begin
+select max_salary, min_salary into v_max_sal, v_min_sal
+from jobs
+where job_id =p_job_id;
+if p_salary<v_min_sal or p_salary>v_max_sal then
+raise_application_error(-20208,'Invalid salary ' || p_salary ||' Salaries for job ' || p_job_id || ' must be between ' ||v_min_sal || ' and ' ||v_max_sal);
+end if;
+exception
+ when no_data_found then
+dbms_output.put_line('there is no data');
+end;
+
+
+b---
+
+create or replace trigger CHECK_SALARY_TRG 
+before INSERT or UPDATE on employees
+for each row
+begin
+CHECK_SALARY(:new.job_id,:new.salary);
+end;
+
+
+
+================================================================================================================================
+
+question  Test the CHECK_SAL_TRG using the following cases:
+a.	Update the salary of employee 115 to $2,000. In a separate update operation, change the employee job ID to HR_REP. What happens in each case?
+b.	Update the salary of employee 115 to $2,800. What happens?	
+
+update employees set salary =2000
+where employee_id=101;
+
+SQL> update employees set salary =2000
+  2  where employee_id=101;
+update employees set salary =2000
+       *
+ERROR at line 1:
+ORA-20208: Invalid salary 2000 Salaries for job AD_VP must be between 15000 and
+30000
+ORA-06512: at "MAKESS.CHECK_SALARY", line 10
+ORA-06512: at "MAKESS.CHECK_SALARY_TRG", line 2
+ORA-04088: error during execution of trigger 'MAKESS.CHECK_SALARY_TRG'
+
+------------b-
+update employees set salary =2800 
+where employee_id=115;
+
+
+SQL> update employees set salary =2800
+  2  where employee_id=115;
+
+1 row updated.
+
+===================================================================================================================================
+
+question  Update the CHECK_SALARY_TRG trigger to fire only when the job ID or salaryvalues have actually changed.
+a.	Implement the business rule using a WHEN clause to check if the JOB_ID or SALARY values have changed.
+       Note: Make sure that the condition handles the NULL in the OLD.column_name values if an INSERT operation is performed; otherwise, an insert operation          will fail. 
+
+b.	Update employees with the IT_PROG job by incrementing their salary by $2,000. What happens? 
+
+
+answer------------
+
+
+a-----------------
+create or replace trigger check_salary_trg
+before insert or update on employees
+for each row
+when (   :new.job_id is distinct from :old.job_id
+       or :new.salary is distinct from :old.salary )
+begin
+    check_salary(:new.job_id, :new.salary);
+end;
+
+b-----------------
+update employees set salary=2000
+where lower(job_id)='it_prog';
+
+SQL> update employees set salary=2000
+  2  where lower(job_id)='it_prog';
+update employees set salary=2000
+       *
+ERROR at line 1:
+ORA-20208: Invalid salary 2000 Salaries for job IT_PROG must be between 4000
+and 10000
+ORA-06512: at "MAKESS.CHECK_SALARY", line 10
+ORA-06512: at "MAKESS.CHECK_SALARY_TRG", line 2
+
+
+====================================================================================================================================
+question 
+
+You are asked to prevent employees from being deleted during business hours.
+
+a.	Write a statement trigger called DELETE_EMP_TRG on the EMPLOYEES table to prevent rows from being deleted during weekday business hours, which are      from 9:00 a.m. to 6:00 p.m.
+
+
+create trigger DELETE_EMP_TRG 
+before delete on employees
+for each row
+begin
+if TO_CHAR(sysdate, 'HH24:MI') IN ('09:00', '06:00') or to_char(sysdate,'dy') not in ('sun','sat') then 
+raise_application_error(-20205,'you can not delete during businees hours');
+end if;
+end;
+
+
+=======================================================================================================================================
+
+Create a table of emp_proj  with nu_empid , vc_name , dt_joining, ch_grade and nu_salary .
+
+write a trigger to calculate the increment on the basis of grade and insert the incremented amount through a procedure in another table emp_appraisal.
+Grades will be A , B , C , D and E
+increment will be 20% of salary for A grade , 15% for B , 10% for C and 5% for D and 2% for E
+
+
+ emp_proj;
+ Name                                      Null?    Type
+ ----------------------------------------- -------- ----------------------------
+ NU_EMPID                                           NUMBER(20)
+ VC_NAME                                            VARCHAR2(20)
+ DT_JOINING                                         DATE
+ CH_GRADE                                           CHAR(1)
+ NU_SALARY                                          NUMBER(20)
+
+
+CREATE TABLE emp_appraisal (
+    nu_empid number(20),
+    ch_grade CHAR(1),
+    nu_salary DECIMAL(10, 2),
+    nu_increment DECIMAL(10, 2),
+   
+);
+
+
+create or replace procedure sal_increment(
+    p_ch_grade char,
+    p_nu_empid number,
+    p_nu_salary number
+)
+is
+    v_increment number;
+    v_incremented_salary number;
+begin
+   
+    if p_ch_grade = 'a' then
+     v_increment := p_nu_salary * 0.20;
+    elsif p_ch_grade = 'b' then
+     v_increment := p_nu_salary * 0.15;
+    elsif p_ch_grade = 'c' then
+     v_increment := p_nu_salary * 0.10;
+    elsif p_ch_grade = 'd' then
+     v_increment := p_nu_salary * 0.05;
+    elsif p_ch_grade = 'e' then
+     v_increment := p_nu_salary * 0.02;
+    else
+        v_increment := 0;
+    end if;    
+    v_incremented_salary := p_nu_salary + v_increment;
+    insert into emp_appraisal (nu_empid, ch_grade, nu_salary, nu_increment)
+    values (p_nu_empid, p_ch_grade, v_incremented_salary, v_increment);
+end;
+
+
+
+
+create or replace trigger salary_update
+after insert or update on emp_proj
+for each row
+begin
+    sal_increment(
+        :new.ch_grade,
+         :new.nu_empid,
+           :new.nu_salary
+    );
+end;
+
+
+
