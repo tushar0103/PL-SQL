@@ -1,4 +1,62 @@
- Assignment 26/08/24
+create or replace procedure get_salaries
+is
+cursor c1 is
+select first_name, salary
+from employees
+where salary = (
+select max(salary)
+from employees
+where salary < (select max(salary) from employees)
+);
+
+cursor c2 is
+select first_name, salary
+from employees
+where salary = (
+select min(salary)
+from employees
+where salary > (select min(salary) from employees)
+);
+
+v_rec1 c1%rowtype;
+v_rec2 c2%rowtype;
+begin
+open c1;
+loop
+fetch c1 into v_rec1;
+exit when c1%notfound;
+dbms_output.put_line('second highest salary of ' || v_rec1.first_name || ' is ' || v_rec1.salary);
+end loop;
+close c1;
+
+open c2;
+loop
+fetch c2 into v_rec2;
+exit when c2%notfound;
+dbms_output.put_line('second lowest salary of ' || v_rec2.first_name || ' is ' || v_rec2.salary);
+end loop;
+close c2;
+
+exception
+when others then
+dbms_output.put_line('an error came  ' || sqlerrm);
+end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Assignment 26/08/24
 
 Name Tushar kumar
 3813
