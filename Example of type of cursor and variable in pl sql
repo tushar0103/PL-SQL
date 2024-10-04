@@ -10,7 +10,7 @@ SQL> declare
   6  dbms_output.put_line(v_sal);
   7  end;
   8  /
-33000
+33000          
 
 
 declare
